@@ -1,0 +1,21 @@
+{
+  "name": "puppeteer-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.21.2",
+    "fs": "^0.0.1-security",
+    "populate": "^0.1.4",
+    "puppeteer": "^24.4.0",
+    "puppeteer-api": "file:",
+    "readline": "^1.3.0"
+  }
+}
