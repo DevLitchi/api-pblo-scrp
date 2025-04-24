@@ -1,13 +1,27 @@
 const puppeteer = require('puppeteer');
+const readline = require('readline');
 
-(async () => {
+// Crear interfaz para leer desde la consola
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.question('Ingresa el enlace del pedido: ', async (orderUrl) => {
+    // Validar si el usuario ingresó un enlace válido
+    if (!orderUrl.startsWith("http")) {
+        console.log("URL inválida. Asegúrate de ingresar un enlace completo.");
+        rl.close();
+        return;
+    }
+
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
 
-    console.log('Cargando página de pedido...');
-    await page.goto("https://www.mcmaster.com/order/rcvRtedOrd.aspx?ordid=8045124887158&lnktyp=txt", { waitUntil: 'domcontentloaded' });
+    console.log(`Cargando página de pedido: ${orderUrl}`);
+    await page.goto(orderUrl, { waitUntil: 'domcontentloaded' });
 
     await page.waitForSelector('.line-catalog-link', { visible: true });
 
@@ -15,7 +29,11 @@ const puppeteer = require('puppeteer');
 
     const data = await page.evaluate(() => {
         const partNumbers = Array.from(document.querySelectorAll('.line-part-number-input')).map(sn => sn.value.trim());
-        return { partNumbers };
+        const quantities = Array.from(document.querySelectorAll('.line-quantity-input')).map(q => q.value.trim());
+        const unitPrices = Array.from(document.querySelectorAll('.line-unit-price')).map(up => up.innerText.split('\n')[0].trim());
+        const totalPrices = Array.from(document.querySelectorAll('.line-total-price')).map(tp => tp.innerText.trim());
+
+        return { partNumbers, quantities, unitPrices, totalPrices };
     });
 
     console.log('Números de parte extraídos:', data.partNumbers);
@@ -53,6 +71,9 @@ const puppeteer = require('puppeteer');
 
         detailedProducts[`articulo_${i + 1}`] = {
             Titulo: productDetails.title,
+            Cantidad: data.quantities[i],
+            "Precio Unitario": data.unitPrices[i],
+            Total: data.totalPrices[i],
             detalles: productDetails.specifications
         };
 
@@ -64,4 +85,7 @@ const puppeteer = require('puppeteer');
     // Formatear la salida en JSON con la estructura solicitada
     const carrito = { Carrito: detailedProducts };
     console.log(JSON.stringify(carrito, null, 2));
-})();
+
+    // Cerrar readline
+    rl.close();
+});
